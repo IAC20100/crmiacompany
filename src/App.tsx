@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Wrench, Users, ClipboardList, FileText, Home, Settings as SettingsIcon, Moon, Sun, Kanban, Calculator, Receipt, DollarSign, Calendar as CalendarIcon, Package, Bell, LayoutDashboard, ListTodo, Hammer, User } from 'lucide-react';
+import { Wrench, Users, ClipboardList, FileText, Home, Settings as SettingsIcon, Moon, Sun, Kanban, Calculator, Receipt, DollarSign, Calendar as CalendarIcon, Package, Bell, LayoutDashboard, ListTodo, Hammer, User, ChevronDown } from 'lucide-react';
 import { useStore } from './store';
 
 import Dashboard from './pages/Dashboard';
@@ -17,7 +17,7 @@ import Financial from './pages/Financial';
 import Calendar from './pages/Calendar';
 import Products from './pages/Products';
 
-function NavLink({ to, icon: Icon, children, mobile = false }: { to: string, icon: any, children: React.ReactNode, mobile?: boolean }) {
+function NavLink({ to, icon: Icon, children, mobile = false, sub = false }: { to: string, icon: any, children: React.ReactNode, mobile?: boolean, sub?: boolean }) {
   const location = useLocation();
   const isActive = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
   
@@ -41,11 +41,42 @@ function NavLink({ to, icon: Icon, children, mobile = false }: { to: string, ico
       className={`flex items-center gap-3 p-4 rounded-2xl transition-all font-bold ${
         isActive 
           ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-          : 'text-zinc-500 hover:bg-zinc-100'
+          : sub 
+            ? 'text-zinc-500 hover:bg-zinc-50 py-3 text-sm'
+            : 'text-zinc-500 hover:bg-zinc-100'
       }`}
     >
-      <Icon className="w-5 h-5" /> {children}
+      <Icon className={sub ? "w-4 h-4" : "w-5 h-5"} /> {children}
     </Link>
+  );
+}
+
+function NavGroup({ title, icon: Icon, children }: { title: string, icon: any, children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = React.useState(true);
+  const location = useLocation();
+  const hasActiveChild = React.Children.toArray(children).some((child: any) => 
+    location.pathname === child.props.to || (child.props.to !== '/' && location.pathname.startsWith(child.props.to))
+  );
+
+  return (
+    <div className="space-y-1">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center justify-between w-full p-4 rounded-2xl transition-all font-bold ${
+          hasActiveChild ? 'text-primary' : 'text-zinc-500 hover:bg-zinc-100'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <Icon className="w-5 h-5" /> {title}
+        </div>
+        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {isOpen && (
+        <div className="pl-4 space-y-1 border-l-2 border-zinc-50 ml-6">
+          {children}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -66,12 +97,18 @@ function Layout({ children }: { children: React.ReactNode }) {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-72 bg-white border-r border-zinc-100 flex-col shadow-sm z-10 print:hidden">
         <div className="p-8 flex items-center gap-4">
-          <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30">
-            <Wrench className="w-6 h-6 text-white" />
-          </div>
+          {companyLogo ? (
+            <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-lg border border-zinc-100">
+              <img src={companyLogo} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30">
+              <Wrench className="w-6 h-6 text-white" />
+            </div>
+          )}
           <div className="flex flex-col">
-            <span className="font-black text-xl tracking-tighter leading-none">MAINTENANCE</span>
-            <span className="font-black text-xl tracking-tighter leading-none text-primary">PRO</span>
+            <span className="font-black text-xl tracking-tighter leading-none">IA COMPANY</span>
+            <span className="font-black text-xl tracking-tighter leading-none text-primary">TEC</span>
           </div>
         </div>
         
@@ -79,8 +116,10 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/" icon={LayoutDashboard}>Dashboard</NavLink>
           <NavLink to="/clients" icon={Users}>Clientes</NavLink>
           <NavLink to="/products" icon={Package}>Produtos</NavLink>
-          <NavLink to="/checklist" icon={ClipboardList}>Checklists</NavLink>
-          <NavLink to="/tickets" icon={Hammer}>Ordens</NavLink>
+          <NavGroup title="Ordens" icon={Hammer}>
+            <NavLink to="/tickets" icon={ListTodo} sub>Lista de Ordens</NavLink>
+            <NavLink to="/checklist" icon={ClipboardList} sub>Checklists</NavLink>
+          </NavGroup>
           <NavLink to="/kanban" icon={Kanban}>Kanban</NavLink>
           <NavLink to="/quotes" icon={Calculator}>Orçamentos</NavLink>
           <NavLink to="/receipts" icon={Receipt}>Recibos</NavLink>
@@ -103,12 +142,18 @@ function Layout({ children }: { children: React.ReactNode }) {
       {/* Mobile Header */}
       <header className="md:hidden bg-white px-6 py-4 flex justify-between items-center border-b border-zinc-100 sticky top-0 z-20">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-            <Wrench className="w-5 h-5 text-white" />
-          </div>
+          {companyLogo ? (
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-zinc-100">
+              <img src={companyLogo} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+              <Wrench className="w-5 h-5 text-white" />
+            </div>
+          )}
           <div className="flex flex-col">
-            <span className="font-black text-sm tracking-tighter leading-none">MAINTENANCE</span>
-            <span className="font-black text-sm tracking-tighter leading-none text-primary">PRO</span>
+            <span className="font-black text-sm tracking-tighter leading-none">IA COMPANY</span>
+            <span className="font-black text-sm tracking-tighter leading-none text-primary">TEC</span>
           </div>
         </div>
         <button className="p-2 text-zinc-400 hover:text-primary transition-colors">

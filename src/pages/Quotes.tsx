@@ -152,29 +152,36 @@ export default function Quotes() {
         });
         
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        
         const elementWidth = element.offsetWidth;
         const elementHeight = element.offsetHeight;
-        const pdfHeight = (elementHeight * pdfWidth) / elementWidth;
         
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+        const imgWidth = pageWidth;
+        const imgHeight = (elementHeight * pageWidth) / elementWidth;
+        
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        // Add first page
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        // Add subsequent pages if content overflows
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
         
         const client = clients.find(c => c.id === quote.clientId);
         const safeName = client?.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_') || 'Cliente';
         const dateStr = new Date(quote.date).toLocaleDateString('pt-BR').replace(/\//g, '-');
         const fileName = `Orcamento_${safeName}_${dateStr}.pdf`;
         
-        const blob = pdf.output('blob');
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        pdf.save(fileName);
       } catch (error) {
         console.error('Erro ao gerar PDF:', error);
         alert(`Ocorreu um erro ao gerar o PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
@@ -631,137 +638,107 @@ export default function Quotes() {
             {/* Left Vertical Brand Bar */}
             <div className="absolute left-0 top-0 bottom-0 w-2 bg-red-600"></div>
             
-            {/* Main Content Container */}
-            <div className="p-16 flex flex-col min-h-[1131px]">
+            {/* Main Content Container: Continuous Flow Design */}
+            <div className="p-20 flex flex-col bg-white w-full">
               
-              {/* Header: Editorial Style */}
-              <div className="flex justify-between items-start mb-20">
+              {/* Header: Minimalist & Linear */}
+              <div className="flex justify-between items-end pb-16 border-b-4 border-zinc-900 mb-20">
                 <div className="space-y-8">
                   {companyLogo ? (
-                    <img src={companyLogo} alt="Logo" className="h-20 w-auto max-w-[280px] object-contain" />
+                    <img src={companyLogo} alt="Logo" className="h-16 w-auto max-w-[240px] object-contain" />
                   ) : (
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 bg-zinc-900 flex items-center justify-center rounded-2xl rotate-3 shadow-xl">
-                        <Wrench className="w-8 h-8 text-white" />
+                      <div className="w-12 h-12 bg-zinc-900 flex items-center justify-center rounded-xl shadow-lg">
+                        <Wrench className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-3xl font-black tracking-tighter leading-none">MANUTENÇÃO</span>
-                        <span className="text-3xl font-light tracking-widest text-red-600 leading-none">PRO</span>
+                        <span className="text-3xl font-black tracking-tighter leading-none">IA COMPANY</span>
+                        <span className="text-3xl font-light tracking-widest text-red-600 leading-none">TEC</span>
                       </div>
                     </div>
                   )}
                   
-                  <div className="space-y-1 text-[11px] font-medium text-zinc-400 uppercase tracking-[0.1em]">
-                    {companyData ? (
-                      <>
-                        <p className="text-zinc-900 font-bold text-sm mb-2">{companyData.name}</p>
-                        <p>{companyData.address}</p>
-                        <p>CNPJ {companyData.document} • {companyData.phone}</p>
-                        <p>{companyData.email} • {companyData.website || 'www.manutencaopro.com.br'}</p>
-                      </>
-                    ) : (
-                      <p className="italic">Informações da empresa não configuradas</p>
-                    )}
+                  <div className="flex gap-8 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                      <span>{companyData?.name || 'IA COMPANY TEC'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                      <span>CNPJ {companyData?.document || '---'}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <div className="inline-block border-b-4 border-red-600 pb-2 mb-4">
-                    <h1 className="text-7xl font-black tracking-tighter uppercase leading-none">ORÇAMENTO</h1>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="flex items-center gap-3">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">Referência</span>
-                      <span className="text-lg font-mono font-bold text-zinc-900">#{quoteToPrint.id.substring(0, 8).toUpperCase()}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">Emissão</span>
-                      <span className="text-sm font-bold text-zinc-600">{new Date(quoteToPrint.date).toLocaleDateString('pt-BR')}</span>
-                    </div>
+                <div className="text-right space-y-2">
+                  <h1 className="text-6xl font-black tracking-tighter uppercase leading-none text-zinc-900">PROPOSTA</h1>
+                  <div className="flex items-center justify-end gap-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                    <span>REF: #{quoteToPrint.id.substring(0, 8).toUpperCase()}</span>
+                    <span className="w-1 h-1 rounded-full bg-zinc-200"></span>
+                    <span>{new Date(quoteToPrint.date).toLocaleDateString('pt-BR')}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Client & Project Info: Split Grid */}
-              <div className="grid grid-cols-12 gap-12 mb-20">
-                <div className="col-span-7">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-red-600 mb-6">Destinatário</h3>
-                  <div className="bg-zinc-50 rounded-3xl p-8 border border-zinc-100 relative overflow-hidden">
-                    {/* Decorative element */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/50 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                    
-                    <div className="relative z-10">
-                      <p className="text-2xl font-black text-zinc-900 mb-2">
-                        {clients.find(c => c.id === quoteToPrint.clientId)?.name}
-                      </p>
-                      <div className="grid grid-cols-2 gap-4 mt-6">
-                        <div className="space-y-1">
-                          <p className="text-[9px] font-black uppercase text-zinc-400">Documento</p>
-                          <p className="text-xs font-bold text-zinc-700">{clients.find(c => c.id === quoteToPrint.clientId)?.document || '---'}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[9px] font-black uppercase text-zinc-400">Contato</p>
-                          <p className="text-xs font-bold text-zinc-700">{clients.find(c => c.id === quoteToPrint.clientId)?.phone}</p>
-                        </div>
-                        <div className="col-span-2 space-y-1">
-                          <p className="text-[9px] font-black uppercase text-zinc-400">Endereço de Faturamento</p>
-                          <p className="text-xs font-bold text-zinc-700 leading-relaxed">{clients.find(c => c.id === quoteToPrint.clientId)?.address}</p>
-                        </div>
-                      </div>
+              {/* Client Section: Clean Linear Block */}
+              <div className="mb-20">
+                <div className="grid grid-cols-12 gap-12">
+                  <div className="col-span-8">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-red-600 mb-4">Cliente / Destinatário</p>
+                    <h2 className="text-4xl font-black text-zinc-900 tracking-tighter mb-6">
+                      {clients.find(c => c.id === quoteToPrint.clientId)?.name}
+                    </h2>
+                    <div className="flex flex-wrap gap-x-12 gap-y-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
+                      <p>DOC: {clients.find(c => c.id === quoteToPrint.clientId)?.document || '---'}</p>
+                      <p>TEL: {clients.find(c => c.id === quoteToPrint.clientId)?.phone}</p>
+                      <p className="w-full">END: {clients.find(c => c.id === quoteToPrint.clientId)?.address}</p>
                     </div>
                   </div>
-                </div>
-
-                <div className="col-span-5 flex flex-col justify-end">
-                  <div className="border-l-2 border-zinc-100 pl-8 space-y-6">
-                    <div>
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">Validade da Proposta</h4>
-                      <p className="text-sm font-bold text-zinc-900">15 Dias Corridos</p>
-                    </div>
-                    <div>
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">Condições de Pagamento</h4>
-                      <p className="text-sm font-bold text-zinc-900">À combinar / Faturado</p>
-                    </div>
-                    <div className="pt-4">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
-                        <CheckCircle className="w-3 h-3" />
-                        <span className="text-[9px] font-black uppercase tracking-wider">Documento Oficial</span>
+                  <div className="col-span-4 flex flex-col justify-end items-end text-right border-l-2 border-zinc-50 pl-12">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-[9px] font-black uppercase text-zinc-300 tracking-widest mb-1">Validade</p>
+                        <p className="text-sm font-black text-zinc-900">15 DIAS</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black uppercase text-zinc-300 tracking-widest mb-1">Pagamento</p>
+                        <p className="text-sm font-black text-zinc-900">FATURADO</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Items Table: Clean & Spaced */}
-              <div className="flex-1">
-                <table className="w-full border-collapse">
+              {/* Items Table: Brutalist & Continuous */}
+              <div className="mb-20">
+                <table className="w-full">
                   <thead>
-                    <tr className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400">
-                      <th className="pb-6 text-left border-b border-zinc-100">Descrição dos Serviços e Materiais</th>
-                      <th className="pb-6 text-center w-24 border-b border-zinc-100">Qtd</th>
-                      <th className="pb-6 text-right w-32 border-b border-zinc-100">Unitário</th>
-                      <th className="pb-6 text-right w-32 border-b border-zinc-100">Total</th>
+                    <tr className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 border-b-2 border-zinc-900">
+                      <th className="py-4 text-left">Item / Descrição</th>
+                      <th className="py-4 text-center w-20">Qtd</th>
+                      <th className="py-4 text-right w-32">Unitário</th>
+                      <th className="py-4 text-right w-32">Total</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-50">
+                  <tbody className="divide-y divide-zinc-100">
                     {quoteToPrint.items.map((item, idx) => (
-                      <tr key={item.id} className="group">
-                        <td className="py-8 pr-6">
-                          <div className="flex gap-4">
-                            <span className="text-[10px] font-black text-red-600/30 mt-1">{(idx + 1).toString().padStart(2, '0')}</span>
-                            <p className="text-sm font-bold text-zinc-900 leading-relaxed">{item.description}</p>
+                      <tr key={item.id}>
+                        <td className="py-8 pr-8">
+                          <div className="flex gap-6">
+                            <span className="text-[11px] font-black text-zinc-200 mt-1">{(idx + 1).toString().padStart(2, '0')}</span>
+                            <p className="text-base font-black text-zinc-900 leading-tight tracking-tight">{item.description}</p>
                           </div>
                         </td>
                         <td className="py-8 text-center">
-                          <span className="text-sm font-mono font-bold text-zinc-500">{item.quantity}</span>
+                          <span className="text-base font-mono font-black text-zinc-400">{item.quantity}</span>
                         </td>
                         <td className="py-8 text-right">
-                          <span className="text-sm font-mono text-zinc-500">
+                          <span className="text-base font-mono font-bold text-zinc-400">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.unitPrice)}
                           </span>
                         </td>
                         <td className="py-8 text-right">
-                          <span className="text-base font-black text-zinc-900 font-mono">
+                          <span className="text-lg font-black text-zinc-900 font-mono tracking-tighter">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.total)}
                           </span>
                         </td>
@@ -771,65 +748,57 @@ export default function Quotes() {
                 </table>
               </div>
 
-              {/* Totals & Footer Section */}
-              <div className="mt-20">
-                <div className="grid grid-cols-12 gap-12 items-end">
-                  <div className="col-span-7">
-                    <div className="space-y-6">
-                      <div className="bg-zinc-900 rounded-3xl p-10 text-white relative overflow-hidden">
-                        {/* Abstract background */}
-                        <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none">
-                          <div className="absolute top-[-50%] right-[-20%] w-[100%] h-[200%] bg-white rotate-12"></div>
-                        </div>
-                        
-                        <div className="relative z-10 flex justify-between items-end">
-                          <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-4">Investimento Total</p>
-                            <h2 className="text-5xl font-black tracking-tighter">
-                              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(quoteToPrint.totalValue)}
-                            </h2>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Subtotal</p>
-                            <p className="text-sm font-bold text-zinc-400">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(quoteToPrint.totalValue)}</p>
-                          </div>
-                        </div>
+              {/* Totals: High Impact Linear Block */}
+              <div className="mt-auto">
+                <div className="border-t-4 border-zinc-900 pt-12">
+                  <div className="flex justify-between items-start mb-20">
+                    <div className="max-w-md">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-4">Notas e Condições</p>
+                      <p className="text-[11px] text-zinc-500 font-bold leading-relaxed uppercase tracking-wider">
+                        Este orçamento contempla apenas os itens listados acima. 
+                        Qualquer serviço extra será cobrado separadamente mediante aprovação prévia.
+                      </p>
+                    </div>
+                    <div className="text-right space-y-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Subtotal</p>
+                        <p className="text-2xl font-bold text-zinc-400">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(quoteToPrint.totalValue)}
+                        </p>
                       </div>
-                      
-                      <div className="px-4">
-                        <p className="text-[9px] text-zinc-400 font-medium leading-relaxed max-w-md">
-                          * Este orçamento não inclui taxas de urgência ou serviços adicionais não listados. 
-                          Qualquer alteração no escopo resultará em uma nova revisão de valores.
+                      <div className="space-y-1 pt-4 border-t border-zinc-100">
+                        <p className="text-[12px] font-black uppercase tracking-[0.6em] text-red-600">Investimento Total</p>
+                        <p className="text-6xl font-black tracking-tighter text-zinc-900">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(quoteToPrint.totalValue)}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="col-span-5 space-y-12">
-                    <div className="text-center space-y-4">
-                      <div className="w-full h-px bg-zinc-200"></div>
+                  {/* Signatures: Clean Linear Grid */}
+                  <div className="grid grid-cols-2 gap-24 pt-20 border-t border-zinc-50">
+                    <div className="space-y-8">
+                      <div className="h-px bg-zinc-200 w-full"></div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-900">Assinatura do Responsável</p>
-                        <p className="text-[9px] text-zinc-400 font-medium">ManutençãoPro - Departamento Comercial</p>
+                        <p className="text-[11px] font-black uppercase tracking-widest text-zinc-900">IA COMPANY TEC</p>
+                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Responsável Técnico</p>
                       </div>
                     </div>
-                    
-                    <div className="text-center space-y-4">
-                      <div className="w-full h-px bg-zinc-200"></div>
+                    <div className="space-y-8">
+                      <div className="h-px bg-zinc-200 w-full"></div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-900">De acordo do Cliente</p>
-                        <p className="text-[9px] text-zinc-400 font-medium">Assinatura e Carimbo</p>
+                        <p className="text-[11px] font-black uppercase tracking-widest text-zinc-900">Aceite do Cliente</p>
+                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Assinatura e Data</p>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Final Footer Bar */}
-              <div className="mt-auto pt-12 flex justify-between items-center text-[9px] font-black uppercase tracking-[0.2em] text-zinc-300">
-                <span>Gerado via ManutençãoPro Cloud</span>
-                <span>Página 01 de 01</span>
-                <span>Autenticidade Verificada</span>
+                {/* Footer: Minimalist Bar */}
+                <div className="mt-24 pt-12 border-t border-zinc-50 flex justify-between items-center text-[10px] font-black uppercase tracking-[0.4em] text-zinc-300">
+                  <span>IA COMPANY TEC Cloud System</span>
+                  <span>Autenticidade Garantida</span>
+                </div>
               </div>
             </div>
           </div>

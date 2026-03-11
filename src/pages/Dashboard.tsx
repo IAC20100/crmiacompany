@@ -63,12 +63,12 @@ export default function Dashboard() {
                   <p className="text-sm text-zinc-500 font-bold">{client?.name || 'Local não especificado'}</p>
                 </div>
                 <div className={`badge ${
-                  ticket.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : 
-                  ticket.status === 'IN_PROGRESS' ? 'bg-orange-50 text-orange-600' : 
+                  ticket.status === 'CONCLUIDO' ? 'bg-emerald-50 text-emerald-600' : 
+                  ticket.status === 'REALIZANDO' ? 'bg-orange-50 text-orange-600' : 
                   'bg-zinc-50 text-zinc-400'
                 }`}>
-                  {ticket.status === 'COMPLETED' ? 'CONCLUÍDO' : 
-                   ticket.status === 'IN_PROGRESS' ? 'EM ANDAMENTO' : 
+                  {ticket.status === 'CONCLUIDO' ? 'CONCLUÍDO' : 
+                   ticket.status === 'REALIZANDO' ? 'EM ANDAMENTO' : 
                    'AGUARDANDO'}
                 </div>
               </div>
