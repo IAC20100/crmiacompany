@@ -4,16 +4,23 @@ import { Users, FileText, AlertCircle, CheckCircle2, Plus, ArrowRight, Clock, Ha
 import { StatCard } from '../components/StatCard';
 
 export default function Dashboard() {
-  const { clients, tickets } = useStore();
+  const { clients, tickets, companyLogo } = useStore();
   
   const preventivas = tickets.filter(t => t.type === 'PREVENTIVA').length;
   const corretivas = tickets.filter(t => t.type === 'CORRETIVA').length;
 
   return (
     <div className="p-6 md:p-12 max-w-7xl mx-auto">
-      <header className="mb-12">
-        <h1 className="text-4xl font-black text-zinc-900 tracking-tighter mb-2">Olá, Técnico</h1>
-        <p className="text-zinc-500 font-bold">Resumo operacional de hoje, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}</p>
+      <header className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-black text-zinc-900 tracking-tighter mb-2">Olá, Técnico</h1>
+          <p className="text-zinc-500 font-bold">Resumo operacional de hoje, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}</p>
+        </div>
+        {companyLogo && (
+          <div className="h-16 w-auto flex items-center">
+            <img src={companyLogo} alt="Logo da Empresa" className="h-full w-auto object-contain max-w-[200px]" />
+          </div>
+        )}
       </header>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">

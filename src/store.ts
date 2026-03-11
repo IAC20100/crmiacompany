@@ -121,10 +121,13 @@ interface AppState {
   companyLogo: string | null;
   companyData: CompanyData | null;
   theme: 'light' | 'dark';
+  isAuthenticated: boolean;
   
   setCompanyLogo: (logo: string | null) => void;
   setCompanyData: (data: CompanyData) => void;
   toggleTheme: () => void;
+  login: (user: string, pass: string) => boolean;
+  logout: () => void;
   
   addClient: (client: Omit<Client, 'id'>) => void;
   updateClient: (id: string, client: Omit<Client, 'id'>) => void;
@@ -156,6 +159,7 @@ interface AppState {
   updateProduct: (id: string, product: Omit<Product, 'id'>) => void;
   deleteProduct: (id: string) => void;
   importProducts: (products: Omit<Product, 'id'>[]) => void;
+  restoreData: (data: Partial<AppState>) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -177,10 +181,20 @@ export const useStore = create<AppState>()(
       companyLogo: null,
       companyData: null,
       theme: 'light',
+      isAuthenticated: false,
       
       setCompanyLogo: (logo) => set({ companyLogo: logo }),
       setCompanyData: (data) => set({ companyData: data }),
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
+      
+      login: (user, pass) => {
+        if (user === 'admin' && pass === '123') {
+          set({ isAuthenticated: true });
+          return true;
+        }
+        return false;
+      },
+      logout: () => set({ isAuthenticated: false }),
       
       addClient: (client) => set((state) => ({ clients: [...state.clients, { ...client, id: uuidv4() }] })),
       updateClient: (id, updatedClient) => set((state) => ({
@@ -225,6 +239,22 @@ export const useStore = create<AppState>()(
       deleteProduct: (id) => set((state) => ({ products: state.products.filter(p => p.id !== id) })),
       importProducts: (newProducts) => set((state) => ({ 
         products: [...state.products, ...newProducts.map(p => ({ ...p, id: uuidv4() }))]
+      })),
+      restoreData: (data) => set((state) => ({
+        ...state,
+        ...data,
+        // Ensure we don't accidentally overwrite functions if they were included in JSON
+        clients: data.clients || state.clients,
+        checklistItems: data.checklistItems || state.checklistItems,
+        tickets: data.tickets || state.tickets,
+        quotes: data.quotes || state.quotes,
+        receipts: data.receipts || state.receipts,
+        costs: data.costs || state.costs,
+        appointments: data.appointments || state.appointments,
+        products: data.products || state.products,
+        companyLogo: data.companyLogo !== undefined ? data.companyLogo : state.companyLogo,
+        companyData: data.companyData !== undefined ? data.companyData : state.companyData,
+        theme: data.theme || state.theme,
       })),
     }),
     {

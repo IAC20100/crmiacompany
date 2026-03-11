@@ -1,10 +1,16 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useStore, CompanyData } from '../store';
-import { Upload, Trash2, Image as ImageIcon, Save } from 'lucide-react';
+import { Upload, Trash2, Image as ImageIcon, Save, Download, Database, FileUp } from 'lucide-react';
 
 export default function Settings() {
-  const { companyLogo, setCompanyLogo, companyData, setCompanyData } = useStore();
+  const { 
+    companyLogo, setCompanyLogo, 
+    companyData, setCompanyData,
+    clients, checklistItems, tickets, quotes, receipts, costs, appointments, products,
+    restoreData
+  } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const backupInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<CompanyData>({
     name: '',
@@ -36,6 +42,55 @@ export default function Settings() {
     e.preventDefault();
     setCompanyData(formData);
     alert('Dados da empresa salvos com sucesso!');
+  };
+
+  const handleExportBackup = () => {
+    const backupData = {
+      clients,
+      checklistItems,
+      tickets,
+      quotes,
+      receipts,
+      costs,
+      appointments,
+      products,
+      companyLogo,
+      companyData,
+      version: '1.0',
+      exportDate: new Date().toISOString()
+    };
+
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `backup_iac_tec_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const json = JSON.parse(event.target?.result as string);
+          if (confirm('Atenção: Restaurar um backup irá substituir todos os dados atuais. Deseja continuar?')) {
+            restoreData(json);
+            alert('Backup restaurado com sucesso!');
+          }
+        } catch (error) {
+          console.error('Erro ao importar backup:', error);
+          alert('Erro ao importar backup. Verifique se o arquivo é um JSON válido.');
+        }
+      };
+      reader.readAsText(file);
+    }
+    // Reset input
+    if (e.target) e.target.value = '';
   };
 
   return (
@@ -166,6 +221,47 @@ export default function Settings() {
             </button>
           </div>
         </form>
+      </div>
+
+      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 p-6 mt-8">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <Database className="w-6 h-6 text-red-600" />
+          Backup e Restauração
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-zinc-400 mb-6">
+          Gere uma cópia de segurança de todos os seus dados (clientes, ordens, produtos, etc.) para salvar em outro local ou restaurar em caso de necessidade.
+        </p>
+        
+        <div className="flex flex-wrap gap-4">
+          <button 
+            onClick={handleExportBackup}
+            className="bg-zinc-900 dark:bg-white dark:text-zinc-900 text-white px-6 py-3 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-lg"
+          >
+            <Download className="w-5 h-5" /> Gerar Backup Completo
+          </button>
+          
+          <div className="relative">
+            <input 
+              type="file" 
+              accept=".json" 
+              className="hidden" 
+              ref={backupInputRef}
+              onChange={handleImportBackup}
+            />
+            <button 
+              onClick={() => backupInputRef.current?.click()}
+              className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white px-6 py-3 rounded-xl font-bold transition-all hover:bg-zinc-50 dark:hover:bg-zinc-700 flex items-center gap-2"
+            >
+              <FileUp className="w-5 h-5" /> Restaurar Backup
+            </button>
+          </div>
+        </div>
+        
+        <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 rounded-xl">
+          <p className="text-xs text-amber-800 dark:text-amber-200 font-medium leading-relaxed">
+            <strong>Aviso Importante:</strong> Ao restaurar um backup, todos os dados atuais do sistema serão substituídos pelos dados contidos no arquivo. Recomendamos gerar um backup dos dados atuais antes de realizar uma restauração.
+          </p>
+        </div>
       </div>
     </div>
   );

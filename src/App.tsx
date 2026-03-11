@@ -16,6 +16,7 @@ import Receipts from './pages/Receipts';
 import Financial from './pages/Financial';
 import Calendar from './pages/Calendar';
 import Products from './pages/Products';
+import Login from './pages/Login';
 
 function NavLink({ to, icon: Icon, children, mobile = false, sub = false }: { to: string, icon: any, children: React.ReactNode, mobile?: boolean, sub?: boolean }) {
   const location = useLocation();
@@ -81,7 +82,7 @@ function NavGroup({ title, icon: Icon, children }: { title: string, icon: any, c
 }
 
 function Layout({ children }: { children: React.ReactNode }) {
-  const { companyLogo, theme, toggleTheme } = useStore();
+  const { companyLogo, theme, toggleTheme, isAuthenticated, logout } = useStore();
   const location = useLocation();
   
   useEffect(() => {
@@ -91,6 +92,10 @@ function Layout({ children }: { children: React.ReactNode }) {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
   
   return (
     <div className="min-h-screen bg-surface flex flex-col md:flex-row transition-colors duration-200">
@@ -98,8 +103,8 @@ function Layout({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex w-72 bg-white border-r border-zinc-100 flex-col shadow-sm z-10 print:hidden">
         <div className="p-8 flex items-center gap-4">
           {companyLogo ? (
-            <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-lg border border-zinc-100">
-              <img src={companyLogo} alt="Logo" className="w-full h-full object-contain" />
+            <div className="h-12 w-auto flex items-center">
+              <img src={companyLogo} alt="Logo" className="h-full w-auto object-contain max-w-[100px]" />
             </div>
           ) : (
             <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30">
@@ -136,6 +141,14 @@ function Layout({ children }: { children: React.ReactNode }) {
             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             <span>{theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
           </button>
+          
+          <button 
+            onClick={logout}
+            className="flex items-center gap-3 p-4 rounded-2xl transition-all font-bold text-red-500 hover:bg-red-50 w-full"
+          >
+            <User className="w-5 h-5" />
+            <span>Sair do Sistema</span>
+          </button>
         </div>
       </aside>
 
@@ -143,8 +156,8 @@ function Layout({ children }: { children: React.ReactNode }) {
       <header className="md:hidden bg-white px-6 py-4 flex justify-between items-center border-b border-zinc-100 sticky top-0 z-20">
         <div className="flex items-center gap-3">
           {companyLogo ? (
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-zinc-100">
-              <img src={companyLogo} alt="Logo" className="w-full h-full object-contain" />
+            <div className="h-10 w-auto flex items-center">
+              <img src={companyLogo} alt="Logo" className="h-full w-auto object-contain max-w-[80px]" />
             </div>
           ) : (
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
