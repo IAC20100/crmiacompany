@@ -119,11 +119,13 @@ interface AppState {
   appointments: Appointment[];
   products: Product[];
   companyLogo: string | null;
+  companySignature: string | null;
   companyData: CompanyData | null;
   theme: 'light' | 'dark';
   isAuthenticated: boolean;
   
   setCompanyLogo: (logo: string | null) => void;
+  setCompanySignature: (signature: string | null) => void;
   setCompanyData: (data: CompanyData) => void;
   toggleTheme: () => void;
   login: (user: string, pass: string) => boolean;
@@ -179,11 +181,13 @@ export const useStore = create<AppState>()(
       appointments: [],
       products: [],
       companyLogo: null,
+      companySignature: null,
       companyData: null,
       theme: 'light',
       isAuthenticated: false,
       
       setCompanyLogo: (logo) => set({ companyLogo: logo }),
+      setCompanySignature: (signature) => set({ companySignature: signature }),
       setCompanyData: (data) => set({ companyData: data }),
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       
@@ -253,6 +257,7 @@ export const useStore = create<AppState>()(
         appointments: data.appointments || state.appointments,
         products: data.products || state.products,
         companyLogo: data.companyLogo !== undefined ? data.companyLogo : state.companyLogo,
+        companySignature: data.companySignature !== undefined ? data.companySignature : state.companySignature,
         companyData: data.companyData !== undefined ? data.companyData : state.companyData,
         theme: data.theme || state.theme,
       })),

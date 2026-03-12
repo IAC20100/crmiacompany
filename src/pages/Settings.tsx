@@ -5,11 +5,13 @@ import { Upload, Trash2, Image as ImageIcon, Save, Download, Database, FileUp } 
 export default function Settings() {
   const { 
     companyLogo, setCompanyLogo, 
+    companySignature, setCompanySignature,
     companyData, setCompanyData,
     clients, checklistItems, tickets, quotes, receipts, costs, appointments, products,
     restoreData
   } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const signatureInputRef = useRef<HTMLInputElement>(null);
   const backupInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<CompanyData>({
@@ -38,6 +40,17 @@ export default function Settings() {
     }
   };
 
+  const handleSignatureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCompanySignature(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSaveData = (e: React.FormEvent) => {
     e.preventDefault();
     setCompanyData(formData);
@@ -55,6 +68,7 @@ export default function Settings() {
       appointments,
       products,
       companyLogo,
+      companySignature,
       companyData,
       version: '1.0',
       exportDate: new Date().toISOString()
@@ -140,6 +154,56 @@ export default function Settings() {
                   className="bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" /> Remover Logo
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 p-6 mt-8">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Assinatura da Empresa</h2>
+        <div className="flex flex-col md:flex-row items-start gap-6">
+          <div className="w-64 h-32 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-lg flex items-center justify-center bg-gray-50 dark:bg-zinc-800/50 overflow-hidden shrink-0">
+            {companySignature ? (
+              <img src={companySignature} alt="Assinatura da Empresa" className="w-full h-full object-contain" />
+            ) : (
+              <div className="text-center text-gray-400 dark:text-zinc-500">
+                <ImageIcon className="w-8 h-8 mx-auto mb-1 opacity-50" />
+                <span className="text-xs">Sem assinatura</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex-1 space-y-4">
+            <p className="text-sm text-gray-600 dark:text-zinc-400">
+              Adicione uma imagem da assinatura digitalizada ou carimbo da sua empresa. Ela será exibida no rodapé de Orçamentos, Ordens de Serviço e Recibos.
+            </p>
+            <p className="text-xs text-gray-500 dark:text-zinc-500">
+              Recomendamos uma imagem com fundo transparente (PNG) para melhor visualização nos documentos.
+            </p>
+            
+            <div className="flex flex-wrap gap-3 pt-2">
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                ref={signatureInputRef}
+                onChange={handleSignatureChange}
+              />
+              <button 
+                onClick={() => signatureInputRef.current?.click()}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              >
+                <Upload className="w-4 h-4" /> Escolher Assinatura
+              </button>
+              
+              {companySignature && (
+                <button 
+                  onClick={() => setCompanySignature(null)}
+                  className="bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" /> Remover Assinatura
                 </button>
               )}
             </div>

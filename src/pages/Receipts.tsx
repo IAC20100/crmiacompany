@@ -5,7 +5,7 @@ import { jsPDF } from 'jspdf';
 import { toJpeg } from 'html-to-image';
 
 export default function Receipts() {
-  const { clients, companyLogo, companyData, addReceipt } = useStore();
+  const { clients, companyLogo, companyData, companySignature, addReceipt } = useStore();
   const [clientId, setClientId] = useState('');
   const [value, setValue] = useState<number>(0);
   const [description, setDescription] = useState('');
@@ -207,9 +207,16 @@ export default function Receipts() {
                 <p className="mb-16">
                   _________________, {new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                 </p>
-                <div className="w-64 border-t border-gray-800 mx-auto pt-2">
-                  <p className="font-bold">{companyData?.name || 'Assinatura do Recebedor'}</p>
-                  {companyData?.document && <p className="text-sm text-gray-500 mt-1">{companyData.document}</p>}
+                <div className="flex flex-col items-center w-64 mx-auto">
+                  <div className="h-16 flex items-end justify-center w-full relative">
+                    {companySignature && (
+                      <img src={companySignature} alt="Assinatura" className="max-h-full max-w-full object-contain mb-[-8px] relative z-10" />
+                    )}
+                  </div>
+                  <div className="border-t border-gray-800 pt-2 w-full">
+                    <p className="font-bold">{companyData?.name || 'Assinatura do Recebedor'}</p>
+                    {companyData?.document && <p className="text-sm text-gray-500 mt-1">{companyData.document}</p>}
+                  </div>
                 </div>
               </div>
 

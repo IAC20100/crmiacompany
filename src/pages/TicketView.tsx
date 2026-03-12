@@ -8,7 +8,7 @@ import { jsPDF } from 'jspdf';
 export default function TicketView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { tickets, clients, checklistItems, companyLogo, companyData } = useStore();
+  const { tickets, clients, checklistItems, companyLogo, companyData, companySignature } = useStore();
   const printRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -242,11 +242,19 @@ export default function TicketView() {
         {/* Assinaturas */}
         <div className="mt-16 pt-8 grid grid-cols-2 gap-8">
           <div className="text-center">
-            <div className="border-t border-gray-400 dark:border-zinc-600 w-3/4 mx-auto mb-2"></div>
+            <div className="flex flex-col items-center mb-2">
+              <div className="h-16 flex items-end justify-center w-full relative">
+                {companySignature && (
+                  <img src={companySignature} alt="Assinatura" className="max-h-full max-w-full object-contain mb-[-8px] relative z-10" />
+                )}
+              </div>
+              <div className="border-t border-gray-400 dark:border-zinc-600 w-3/4 mx-auto"></div>
+            </div>
             <p className="font-bold text-gray-900 dark:text-white">{ticket.technician}</p>
             <p className="text-sm text-gray-500 dark:text-zinc-400">Técnico Responsável</p>
           </div>
           <div className="text-center">
+            <div className="h-16"></div>
             <div className="border-t border-gray-400 dark:border-zinc-600 w-3/4 mx-auto mb-2"></div>
             <p className="font-bold text-gray-900 dark:text-white">{client.name}</p>
             <p className="text-sm text-gray-500 dark:text-zinc-400">Cliente / Síndico(a)</p>

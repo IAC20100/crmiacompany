@@ -10,7 +10,7 @@ import { StatCard } from '../components/StatCard';
 import { Modal } from '../components/Modal';
 
 export default function Quotes() {
-  const { clients, quotes, products, addQuote, updateQuote, deleteQuote, addReceipt, companyLogo, companyData } = useStore();
+  const { clients, quotes, products, addQuote, updateQuote, deleteQuote, addReceipt, companyLogo, companyData, companySignature } = useStore();
   
   const [isCreating, setIsCreating] = useState(false);
   const [viewingQuote, setViewingQuote] = useState<Quote | null>(null);
@@ -777,16 +777,26 @@ export default function Quotes() {
 
                   {/* Signatures: Clean Linear Grid */}
                   <div className="grid grid-cols-2 gap-24 pt-20 border-t border-zinc-50">
-                    <div className="space-y-8">
-                      <div className="h-px bg-zinc-200 w-full"></div>
-                      <div className="space-y-1">
-                        <p className="text-[11px] font-black uppercase tracking-widest text-zinc-900">IA COMPANY TEC</p>
+                    <div className="space-y-4">
+                      <div className="flex flex-col items-center">
+                        <div className="h-16 flex items-end justify-center w-full relative">
+                          {companySignature && (
+                            <img src={companySignature} alt="Assinatura" className="max-h-full max-w-full object-contain mb-[-8px] relative z-10" />
+                          )}
+                        </div>
+                        <div className="h-px bg-zinc-200 w-full"></div>
+                      </div>
+                      <div className="space-y-1 text-center">
+                        <p className="text-[11px] font-black uppercase tracking-widest text-zinc-900">{companyData?.name || 'IA COMPANY TEC'}</p>
                         <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Responsável Técnico</p>
                       </div>
                     </div>
-                    <div className="space-y-8">
-                      <div className="h-px bg-zinc-200 w-full"></div>
-                      <div className="space-y-1">
+                    <div className="space-y-4">
+                      <div className="flex flex-col items-center">
+                        <div className="h-16 w-full"></div>
+                        <div className="h-px bg-zinc-200 w-full"></div>
+                      </div>
+                      <div className="space-y-1 text-center">
                         <p className="text-[11px] font-black uppercase tracking-widest text-zinc-900">Aceite do Cliente</p>
                         <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Assinatura e Data</p>
                       </div>
