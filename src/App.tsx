@@ -82,7 +82,7 @@ function NavGroup({ title, icon: Icon, children }: { title: string, icon: any, c
 }
 
 function Layout({ children }: { children: React.ReactNode }) {
-  const { companyLogo, theme, toggleTheme, isAuthenticated, logout } = useStore();
+  const { companyLogo, theme, toggleTheme, isAuthenticated, logout, menuOrder } = useStore();
   const location = useLocation();
   
   useEffect(() => {
@@ -96,6 +96,24 @@ function Layout({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) {
     return <Login />;
   }
+
+  const menuItems = {
+    dashboard: <NavLink key="dashboard" to="/" icon={LayoutDashboard}>Dashboard</NavLink>,
+    clients: <NavLink key="clients" to="/clients" icon={Users}>Clientes</NavLink>,
+    products: <NavLink key="products" to="/products" icon={Package}>Produtos</NavLink>,
+    tickets: (
+      <NavGroup key="tickets" title="Ordens" icon={Hammer}>
+        <NavLink to="/tickets" icon={ListTodo} sub>Lista de Ordens</NavLink>
+        <NavLink to="/checklist" icon={ClipboardList} sub>Checklists</NavLink>
+      </NavGroup>
+    ),
+    kanban: <NavLink key="kanban" to="/kanban" icon={Kanban}>Kanban</NavLink>,
+    quotes: <NavLink key="quotes" to="/quotes" icon={Calculator}>Orçamentos</NavLink>,
+    receipts: <NavLink key="receipts" to="/receipts" icon={Receipt}>Recibos</NavLink>,
+    financial: <NavLink key="financial" to="/financial" icon={DollarSign}>Financeiro</NavLink>,
+    calendar: <NavLink key="calendar" to="/calendar" icon={CalendarIcon}>Agenda</NavLink>,
+    settings: <NavLink key="settings" to="/settings" icon={SettingsIcon}>Ajustes</NavLink>,
+  };
   
   return (
     <div className="min-h-screen bg-surface flex flex-col md:flex-row transition-colors duration-200">
@@ -118,19 +136,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         </div>
         
         <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
-          <NavLink to="/" icon={LayoutDashboard}>Dashboard</NavLink>
-          <NavLink to="/clients" icon={Users}>Clientes</NavLink>
-          <NavLink to="/products" icon={Package}>Produtos</NavLink>
-          <NavGroup title="Ordens" icon={Hammer}>
-            <NavLink to="/tickets" icon={ListTodo} sub>Lista de Ordens</NavLink>
-            <NavLink to="/checklist" icon={ClipboardList} sub>Checklists</NavLink>
-          </NavGroup>
-          <NavLink to="/kanban" icon={Kanban}>Kanban</NavLink>
-          <NavLink to="/quotes" icon={Calculator}>Orçamentos</NavLink>
-          <NavLink to="/receipts" icon={Receipt}>Recibos</NavLink>
-          <NavLink to="/financial" icon={DollarSign}>Financeiro</NavLink>
-          <NavLink to="/calendar" icon={CalendarIcon}>Agenda</NavLink>
-          <NavLink to="/settings" icon={SettingsIcon}>Ajustes</NavLink>
+          {menuOrder.map(id => menuItems[id as keyof typeof menuItems])}
         </nav>
 
         <div className="p-6 border-t border-zinc-50 space-y-4">

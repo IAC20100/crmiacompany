@@ -123,10 +123,12 @@ interface AppState {
   companyData: CompanyData | null;
   theme: 'light' | 'dark';
   isAuthenticated: boolean;
+  menuOrder: string[];
   
   setCompanyLogo: (logo: string | null) => void;
   setCompanySignature: (signature: string | null) => void;
   setCompanyData: (data: CompanyData) => void;
+  setMenuOrder: (order: string[]) => void;
   toggleTheme: () => void;
   login: (user: string, pass: string) => boolean;
   logout: () => void;
@@ -185,10 +187,12 @@ export const useStore = create<AppState>()(
       companyData: null,
       theme: 'light',
       isAuthenticated: false,
+      menuOrder: ['dashboard', 'clients', 'products', 'tickets', 'kanban', 'quotes', 'receipts', 'financial', 'calendar', 'settings'],
       
       setCompanyLogo: (logo) => set({ companyLogo: logo }),
       setCompanySignature: (signature) => set({ companySignature: signature }),
       setCompanyData: (data) => set({ companyData: data }),
+      setMenuOrder: (order) => set({ menuOrder: order }),
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       
       login: (user, pass) => {
@@ -260,6 +264,7 @@ export const useStore = create<AppState>()(
         companySignature: data.companySignature !== undefined ? data.companySignature : state.companySignature,
         companyData: data.companyData !== undefined ? data.companyData : state.companyData,
         theme: data.theme || state.theme,
+        menuOrder: data.menuOrder || state.menuOrder,
       })),
     }),
     {

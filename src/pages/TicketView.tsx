@@ -2,8 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../store';
 import { ArrowLeft, Download, Printer, Edit } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { toJpeg } from 'html-to-image';
-import { jsPDF } from 'jspdf';
+import { generatePdf } from '../utils/pdfGenerator';
 
 export default function TicketView() {
   const { id } = useParams();
@@ -25,45 +24,14 @@ export default function TicketView() {
 
     setIsGenerating(true);
     try {
-      // Use html-to-image instead of html2canvas to support modern CSS like oklch
-      const imgData = await toJpeg(element, {
-        quality: 0.95,
-        backgroundColor: '#ffffff',
-        pixelRatio: 2 // equivalent to scale: 2
-      });
-      
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      
-      // We need to calculate the height based on the element's aspect ratio
-      const elementWidth = element.offsetWidth;
-      const elementHeight = element.offsetHeight;
-      const pdfHeight = (elementHeight * pdfWidth) / elementWidth;
-      
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-      
-      // Create a safe filename
       const dateStr = new Date(ticket.date).toLocaleDateString('pt-BR').replace(/\//g, '-');
       const safeName = client.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_');
       const fileName = `OS_${ticket.type}_${safeName}_${dateStr}.pdf`;
-      
-      // Explicit download approach
-      const blob = pdf.output('blob');
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      link.target = '_blank'; // Try to open in new tab if download is blocked in iframe
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Cleanup
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      
+
+      await generatePdf(element, fileName);
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      alert(`Ocorreu um erro ao gerar o PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      alert('Erro ao gerar PDF. Tente usar o botão "Imprimir" no topo da página como alternativa.');
     } finally {
       setIsGenerating(false);
     }
@@ -75,6 +43,12 @@ export default function TicketView() {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
+      {isGenerating && (
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center">
+          <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-zinc-900 font-black uppercase tracking-widest text-sm">Gerando Ordem de Serviço...</p>
+        </div>
+      )}
       <div className="flex justify-between items-center mb-8 print:hidden">
         <div className="flex items-center gap-4">
           <button 

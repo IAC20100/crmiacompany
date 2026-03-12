@@ -1,8 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useStore } from '../store';
 import { Download, Printer, FileText } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import { toJpeg } from 'html-to-image';
+import { generatePdf } from '../utils/pdfGenerator';
 
 export default function Receipts() {
   const { clients, companyLogo, companyData, companySignature, addReceipt } = useStore();
@@ -35,13 +34,9 @@ export default function Receipts() {
       });
 
       // Generate PDF
-      const dataUrl = await toJpeg(receiptRef.current, { quality: 0.95, backgroundColor: '#ffffff' });
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (receiptRef.current.offsetHeight * pdfWidth) / receiptRef.current.offsetWidth;
+      const fileName = `Recibo_${selectedClient?.name.replace(/\s+/g, '_')}_${date}.pdf`;
       
-      pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Recibo_${selectedClient?.name.replace(/\s+/g, '_')}_${date}.pdf`);
+      await generatePdf(receiptRef.current, fileName);
       
       alert('Recibo salvo e baixado com sucesso!');
       
@@ -52,7 +47,7 @@ export default function Receipts() {
       
     } catch (error) {
       console.error('Erro ao gerar recibo:', error);
-      alert('Ocorreu um erro ao gerar o recibo.');
+      alert('Erro ao gerar PDF. Tente usar o botão "Imprimir" no topo da página como alternativa.');
     } finally {
       setIsGenerating(false);
     }
@@ -64,6 +59,12 @@ export default function Receipts() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
+      {isGenerating && (
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center">
+          <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-zinc-900 font-black uppercase tracking-widest text-sm">Gerando Recibo...</p>
+        </div>
+      )}
       <div className="flex justify-between items-center mb-8 print:hidden">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Recibos</h1>

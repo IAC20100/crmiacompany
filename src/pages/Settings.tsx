@@ -1,12 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useStore, CompanyData } from '../store';
-import { Upload, Trash2, Image as ImageIcon, Save, Download, Database, FileUp } from 'lucide-react';
+import { Upload, Trash2, Image as ImageIcon, Save, Download, Database, FileUp, ChevronUp, ChevronDown, Layout as LayoutIcon } from 'lucide-react';
 
 export default function Settings() {
   const { 
     companyLogo, setCompanyLogo, 
     companySignature, setCompanySignature,
     companyData, setCompanyData,
+    menuOrder, setMenuOrder,
     clients, checklistItems, tickets, quotes, receipts, costs, appointments, products,
     restoreData
   } = useStore();
@@ -105,6 +106,29 @@ export default function Settings() {
     }
     // Reset input
     if (e.target) e.target.value = '';
+  };
+
+  const moveMenuItem = (index: number, direction: 'up' | 'down') => {
+    const newOrder = [...menuOrder];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (targetIndex >= 0 && targetIndex < newOrder.length) {
+      [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
+      setMenuOrder(newOrder);
+    }
+  };
+
+  const menuLabels: Record<string, string> = {
+    dashboard: 'Dashboard',
+    clients: 'Clientes',
+    products: 'Produtos',
+    tickets: 'Ordens (Lista/Checklist)',
+    kanban: 'Kanban',
+    quotes: 'Orçamentos',
+    receipts: 'Recibos',
+    financial: 'Financeiro',
+    calendar: 'Agenda',
+    settings: 'Ajustes',
   };
 
   return (
@@ -285,6 +309,42 @@ export default function Settings() {
             </button>
           </div>
         </form>
+      </div>
+
+      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 p-6 mt-8">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <LayoutIcon className="w-6 h-6 text-red-600" />
+          Organização do Menu
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-zinc-400 mb-6">
+          Altere a ordem dos itens no menu lateral para facilitar seu fluxo de trabalho.
+        </p>
+        
+        <div className="space-y-2">
+          {menuOrder.map((id, index) => (
+            <div key={id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-100 dark:border-zinc-700">
+              <span className="font-bold text-zinc-700 dark:text-zinc-200 uppercase text-xs tracking-widest">
+                {menuLabels[id] || id}
+              </span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => moveMenuItem(index, 'up')}
+                  disabled={index === 0}
+                  className="p-2 hover:bg-white dark:hover:bg-zinc-700 rounded-lg transition-colors disabled:opacity-30"
+                >
+                  <ChevronUp className="w-5 h-5" />
+                </button>
+                <button 
+                  onClick={() => moveMenuItem(index, 'down')}
+                  disabled={index === menuOrder.length - 1}
+                  className="p-2 hover:bg-white dark:hover:bg-zinc-700 rounded-lg transition-colors disabled:opacity-30"
+                >
+                  <ChevronDown className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 p-6 mt-8">

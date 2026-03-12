@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useStore } from '../store';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
 import { Modal } from '../components/Modal';

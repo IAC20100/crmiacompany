@@ -4,8 +4,7 @@ import { Upload, Plus, Trash2, Save, FileSpreadsheet, CheckCircle, Clock, XCircl
 import { motion, AnimatePresence } from 'motion/react';
 import Papa from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
-import { toJpeg } from 'html-to-image';
-import { jsPDF } from 'jspdf';
+import { generatePdf } from '../utils/pdfGenerator';
 import { StatCard } from '../components/StatCard';
 import { Modal } from '../components/Modal';
 
@@ -141,59 +140,39 @@ export default function Quotes() {
       }
 
       try {
-        const imgData = await toJpeg(element, {
-          quality: 0.95,
-          backgroundColor: '#ffffff',
-          pixelRatio: 2,
-          style: {
-            transform: 'scale(1)',
-            transformOrigin: 'top left'
-          }
-        });
-        
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        
-        const elementWidth = element.offsetWidth;
-        const elementHeight = element.offsetHeight;
-        
-        const imgWidth = pageWidth;
-        const imgHeight = (elementHeight * pageWidth) / elementWidth;
-        
-        let heightLeft = imgHeight;
-        let position = 0;
-
-        // Add first page
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-
-        // Add subsequent pages if content overflows
-        while (heightLeft > 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-        
         const client = clients.find(c => c.id === quote.clientId);
         const safeName = client?.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_') || 'Cliente';
         const dateStr = new Date(quote.date).toLocaleDateString('pt-BR').replace(/\//g, '-');
         const fileName = `Orcamento_${safeName}_${dateStr}.pdf`;
-        
-        pdf.save(fileName);
+
+        await generatePdf(element, fileName);
       } catch (error) {
         console.error('Erro ao gerar PDF:', error);
-        alert(`Ocorreu um erro ao gerar o PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        alert(`Erro ao gerar PDF. Tente usar o botão "Imprimir" como alternativa.`);
       } finally {
         setIsGenerating(false);
         setQuoteToPrint(null);
       }
-    }, 1500); // Increased timeout to ensure rendering
+    }, 1500); // Increased timeout for safety
+  };
+
+  const handlePrintQuote = (quote: Quote) => {
+    setQuoteToPrint(quote);
+    setTimeout(() => {
+      window.print();
+      setQuoteToPrint(null);
+    }, 1000);
   };
 
   return (
     <div className="min-h-screen bg-white">
+      {isGenerating && (
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center">
+          <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-zinc-900 font-black uppercase tracking-widest text-sm">Gerando Documento de Alta Qualidade...</p>
+          <p className="text-zinc-400 text-xs mt-2">Isso pode levar alguns segundos</p>
+        </div>
+      )}
       <AnimatePresence mode="wait">
         {!isCreating ? (
           <motion.div 
@@ -313,6 +292,13 @@ export default function Quotes() {
                                 title="Visualizar"
                               >
                                 <Eye className="w-5 h-5" />
+                              </button>
+                              <button 
+                                onClick={() => handlePrintQuote(quote)}
+                                className="p-3 bg-zinc-50 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-2xl transition-all"
+                                title="Imprimir"
+                              >
+                                <Printer className="w-5 h-5" />
                               </button>
                               <button 
                                 onClick={() => handleDownloadPdf(quote)}
